@@ -1,0 +1,17 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1806
+
+------------------------------------------------------------------------
+IMPORTANT NOTICE: This script is now merged with Ming Bai's FencView.vim. The content below is now obsolete. Please go check vimscript#1708.
+------------------------------------------------------------------------
+
+The Vim option 'fileencodings' has some limitations: e.g., it cannot autodetect GBK and Big5 files at the same time. This is my first motivation to write this script (and the support program tellenc).
+
+This script does these things to decide the encoding of a file:
+
+- If a file has a modeline fileencoding=..., it will be used as the encoding to open the file.
+- If a file is an HTML file, and it has the encoding specified with a HTTP-EQUIV meta tag, it will be used as the encoding to open the file. The file pattern of HTML files can be customized by the global variable multienc_html_patterns.
+- If a file cannot be decided by the steps above, tellenc may be used to decide its encoding. This includes HTML files without a suitable HTTP-EQUIV meta tag, and additional files can be detected with the global variable multienc_auto_patterns.
+- A file can be manually autodetected with the command EditAutoEncoding (without a file name for the current buffer, or with a file name to edit a new file).
+- The autodetection may be overridden with the command EditManualEncoding ("e ++enc=" may not work in some cases now).
+
+The program used to tell the encoding of a file is "tellenc" by default. It can also be changed with the environment variable MULTIENC_TELLENC. My current tellenc, available at http://wyw.dcweb.cn/download.asp?path=&file=tellenc.zip, supports ASCII, UTF8, UTF-16, Latin1, Windows-1252, GB2312, GBK, Big5, and any Unicode encodings with BOM.
