@@ -1,8 +1,8 @@
 " MultiEnc.vim: Script to autodetect multiple encodings
 " Author: Wu Yongwei <wuyongwei@gmail.com>
 " Licence: LGPL
-" $Revision: 1.3 $
-" $Date: 2007/02/25 13:19:37 $
+" $Revision: 1.4 $
+" $Date: 2007/02/27 11:44:24 $
 "
 " Tested with gVim 7.0 under Windows XP
 
@@ -32,6 +32,35 @@ if !exists('g:legacy_encoding')
 endif
 
 let g:multienc_disable_autodetection=0
+
+function! s:NormalizeEncodingName(enc)
+  if a:enc == 'gbk'
+    return 'cp936'
+  elseif has('win32') || has('win32unix') || has('win64')
+    if a:enc == 'gb2312'
+      return 'cp936'
+    elseif a:enc == 'big5'
+      return 'cp950'
+    endif
+  elseif has('unix')
+    if a:enc == 'gb2312'
+      return 'euc-cn'
+    endif
+  endif
+  return a:enc
+endfunction
+
+function! s:ConvertHtmlEncoding(enc)
+  if a:enc =~? 'gb2312'
+    return 'cp936'            " GB2312 imprecisely means CP936 in HTML
+  elseif a:enc ==? 'iso-8859-1'
+    return 'latin1'           " The canonical encoding name in Vim
+  elseif a:enc ==? 'utf8'
+    return 'utf-8'            " Other encoding aliases should follow here
+  else
+    return s:NormalizeEncodingName(tolower(a:enc))
+  endif
+endfunction
 
 function! CheckFileEncoding()
   if &modified && &fileencoding != ''
@@ -94,11 +123,7 @@ function! EditAutoEncoding(...)
     echo iconv(result, g:legacy_encoding, &encoding)
     return
   endif
-  if has('win32') || has('win64')
-    if result =~ '^gb'
-      let result='cp936'
-    endif
-  endif
+  let result=s:NormalizeEncodingName(result)
   if result != &fileencoding
     if result == 'binary'
       echo 'Binary file'
@@ -117,18 +142,6 @@ function! EditAutoEncoding(...)
   endif
 endfunction
 
-function! ConvertHtmlEncoding(encoding)
-  if a:encoding ==? 'gb2312'
-    return 'cp936'            " GB2312 imprecisely means CP936 in HTML
-  elseif a:encoding ==? 'iso-8859-1'
-    return 'latin1'           " The canonical encoding name in Vim
-  elseif a:encoding ==? 'utf8'
-    return 'utf-8'            " Other encoding aliases should follow here
-  else
-    return a:encoding
-  endif
-endfunction
-
 function! DetectHtmlEncoding()
   if g:multienc_disable_autodetection
     return
@@ -139,7 +152,7 @@ function! DetectHtmlEncoding()
     let reg_bak=@"
     normal y$
     let charset=matchstr(@", 'text/html; charset=\zs[-A-Za-z0-9_]\+')
-    let charset=ConvertHtmlEncoding(charset)
+    let charset=s:ConvertHtmlEncoding(charset)
     normal ``
     let @"=reg_bak
     if &fileencodings == ''
